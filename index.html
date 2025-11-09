@@ -16,6 +16,40 @@
 
     <script>
 (function(){
+  const PROXY_BASE = "http://192.168.1.100:8080"; // <-- آدرس PC خودت
+  // fetch hook
+  const _fetch = window.fetch;
+  window.fetch = function(input, init){
+    try{
+      const url = (typeof input === 'string') ? input : input.url;
+      if(url && url.includes("/playready-license/")){
+        const newUrl = url.replace(/^https?:\/\/[^\/]+/, PROXY_BASE);
+        console.log("[license-hook] fetch ->", newUrl);
+        input = (typeof input === 'string') ? newUrl : new Request(newUrl, input);
+      }
+    }catch(e){console.warn("[license-hook] fetch hook error", e)}
+    return _fetch.call(this, input, init);
+  };
+
+  // XHR hook
+  const XProto = window.XMLHttpRequest && window.XMLHttpRequest.prototype;
+  if(XProto){
+    const _open = XProto.open;
+    const _send = XProto.send;
+    XProto.open = function(method, url){
+      if(url && url.includes("/playready-license/")){
+        const newUrl = url.replace(/^https?:\/\/[^\/]+/, PROXY_BASE);
+        console.log("[license-hook] xhr open ->", newUrl);
+        return _open.call(this, method, newUrl, ...Array.prototype.slice.call(arguments,2));
+      }
+      return _open.apply(this, arguments);
+    };
+    // no need to touch send; headers preserved by browser
+  }
+})();
+</script>
+    <script>
+(function(){
   const origFetch = window.fetch;
   window.fetch = function(input, init) {
     // normalize URL
