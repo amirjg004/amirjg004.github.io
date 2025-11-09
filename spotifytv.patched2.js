@@ -2468,7 +2468,7 @@
                     s = n(15462),
                     u = n(40340),
                     c = {
-                        webgate: "https://spclient.wg.spotify.com/",
+                        webgate: "http://192.168.70.40:8080/",
                         webapi: "https://api.spotify.com/",
                         dealer: "wss://dealer.spotify.com:443/",
                         apipartner: "https://api-partner.spotify.com/"
