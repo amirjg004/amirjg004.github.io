@@ -14,6 +14,38 @@
     <meta name="viewport" content="width=1280,height=720,initial-scale=1.0,user-scalable=no">
     <title>Spotify</title>
 
+    <script>
+(function(){
+  const origFetch = window.fetch;
+  window.fetch = function(input, init) {
+    // normalize URL
+    try {
+      let url = (typeof input === 'string') ? input : input.url;
+      if (url && url.includes('spclient.wg.spotify.com/playready-license')) {
+        // rewrite host -> localhost:8080
+        const newUrl = url.replace('https://spclient.wg.spotify.com', 'http://localhost:8080');
+        console.log('[license-redirect] ', url, '->', newUrl);
+        if (typeof input === 'string') input = newUrl;
+        else input = new Request(newUrl, input);
+      }
+    } catch(e){ console.warn('rewrite error', e); }
+    return origFetch.call(this, input, init);
+  };
+
+  // XHR override too (some libs use XHR)
+  const origOpen = XMLHttpRequest.prototype.open;
+  const origSend = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function(method, url) {
+    if (url && url.includes('spclient.wg.spotify.com/playready-license')) {
+      const newUrl = url.replace('https://spclient.wg.spotify.com', 'http://localhost:8080');
+      console.log('[xhr license-redirect]', url, '->', newUrl);
+      url = newUrl;
+    }
+    return origOpen.apply(this, [method, url, ...Array.prototype.slice.call(arguments,2)]);
+  };
+})();
+</script>
+
     <script type="text/javascript">
         function o(t, e, r) {
             var o;
